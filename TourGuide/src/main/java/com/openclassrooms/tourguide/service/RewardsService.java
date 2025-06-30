@@ -1,5 +1,6 @@
 package com.openclassrooms.tourguide.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -35,20 +36,34 @@ public class RewardsService {
 	public void setDefaultProximityBuffer() {
 		proximityBuffer = defaultProximityBuffer;
 	}
-	
+
+	public void setAttractionProximityRange(int attractionProximityRange) {
+		this.attractionProximityRange = attractionProximityRange;
+	}
+
 	public void calculateRewards(User user) {
-		List<VisitedLocation> userLocations = user.getVisitedLocations();
-		List<Attraction> attractions = gpsUtil.getAttractions();
-		
+		List<VisitedLocation> userLocations = new ArrayList<>(user.getVisitedLocations());
+		List<Attraction> attractions = new ArrayList<>(gpsUtil.getAttractions());
+		List<UserReward> rewards = new ArrayList<>(user.getUserRewards());
+		List<UserReward> newRewards = new ArrayList<>();
+
 		for(VisitedLocation visitedLocation : userLocations) {
 			for(Attraction attraction : attractions) {
-				if(user.getUserRewards().stream().filter(r -> r.attraction.attractionName.equals(attraction.attractionName)).count() == 0) {
-					if(nearAttraction(visitedLocation, attraction)) {
-						user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
-					}
+				boolean isNotYetAwarded = rewards.stream()
+						.noneMatch(reward ->
+								reward.attraction.attractionName
+										.equals(attraction.attractionName));
+
+				if (isNotYetAwarded && nearAttraction(visitedLocation, attraction))
+				{
+					int nbOfPoints = getRewardPoints(attraction, user);
+					newRewards.add(new UserReward(visitedLocation, attraction, nbOfPoints));
 				}
 			}
 		}
+
+		// safely add rewards after iteration
+		newRewards.forEach(user::addUserReward);
 	}
 	
 	public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
