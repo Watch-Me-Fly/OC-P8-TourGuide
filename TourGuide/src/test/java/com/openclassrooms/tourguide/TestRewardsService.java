@@ -7,7 +7,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import org.junit.jupiter.api.Disabled;
+import gpsUtil.location.Location;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import gpsUtil.GpsUtil;
@@ -47,21 +48,46 @@ public class TestRewardsService {
 		assertTrue(rewardsService.isWithinAttractionProximity(attraction, attraction));
 	}
 
-	@Disabled // Needs fixed - can throw ConcurrentModificationException
+	/**
+	 * Tests that a user receives a reward for every attraction when proximity is a very large value
+	 * (effectively disabling distance checks)
+	 */
+	@DisplayName("Reward user for nearby attractions")
 	@Test
 	public void nearAllAttractions() {
+		// Arrange ___
 		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
-		rewardsService.setProximityBuffer(Integer.MAX_VALUE);
+		List<Attraction> attractions = gpsUtil.getAttractions();
 
+		// Sets proximity to MAX, so the user is near EVERY attraction
+		rewardsService.setProximityBuffer(Integer.MAX_VALUE);
+		// Sets the test to simulate 1 user
 		InternalTestHelper.setInternalUserNumber(1);
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+		User user = tourGuideService.getAllUsers().get(0);
 
-		rewardsService.calculateRewards(tourGuideService.getAllUsers().get(0));
-		List<UserReward> userRewards = tourGuideService.getUserRewards(tourGuideService.getAllUsers().get(0));
+		// Act ___
+		// Add a visited location at each attraction location
+		for (Attraction attraction : attractions) {
+			VisitedLocation visited = new VisitedLocation(
+					user.getUserId(),
+					new Location(attraction.latitude, attraction.longitude),
+					new Date());
+			user.addToVisitedLocations(visited);
+		}
+		// Retrieve a list of user's rewards and stop tracker thread
+		rewardsService.calculateRewards(user);
+		List<UserReward> userRewards = tourGuideService.getUserRewards(user);
+
+		// Stop tracking
 		tourGuideService.tracker.stopTracking();
 
-		assertEquals(gpsUtil.getAttractions().size(), userRewards.size());
+		// Assert ___
+		// Were rewards obtained for ALL available attractions ?
+		int nbOfAttractions = attractions.size();
+		int nbOfUserRewards = userRewards.size();
+		assertEquals(attractions.size(), userRewards.size());
 	}
 
 }
