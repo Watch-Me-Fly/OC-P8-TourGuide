@@ -3,6 +3,7 @@ package com.openclassrooms.tourguide;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -49,15 +50,15 @@ public class TestRewardsService {
 
 		user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 		attractions = List.of(
-				new Attraction("A", "City", "State", 10.0, 10.0),
-				new Attraction("B", "City", "State", 20.0, 20.0),
-				new Attraction("C", "City", "State", 30.0, 30.0),
-				new Attraction("D", "City", "State", 40.0, 40.0),
-				new Attraction("E", "City", "State", 50.0, 50.0));
+				new Attraction("Eiffel Tower", "Paris", "FR", 48.8584, 2.2945),
+				new Attraction("Louvre Museum", "Paris", "FR", 48.8606, 2.3376),
+				new Attraction("Notre-Dame", "Paris", "FR", 48.8530, 2.3499),
+				new Attraction("Arc de Triomphe", "Paris", "FR", 48.8738, 2.2950),
+				new Attraction("Montmartre", "Paris", "FR", 48.8867, 2.3431));
 
 		rewardsService = new RewardsService(gpsUtil, rewardCentral);
-		when(gpsUtil.getAttractions()).thenReturn(attractions);
-		when(rewardCentral.getAttractionRewardPoints(any(), any())).thenReturn(500);
+		lenient().when(gpsUtil.getAttractions()).thenReturn(attractions);
+		lenient().when(rewardCentral.getAttractionRewardPoints(any(), any())).thenReturn(500);
 	}
 
 	@Test
@@ -85,9 +86,7 @@ public class TestRewardsService {
 
 	@Test
 	public void isWithinAttractionProximity() {
-		GpsUtil gpsUtil = new GpsUtil();
-		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
-		Attraction attraction = gpsUtil.getAttractions().get(0);
+		Attraction attraction = attractions.getFirst();
 		assertTrue(rewardsService.isWithinAttractionProximity(attraction, attraction));
 	}
 
@@ -99,22 +98,23 @@ public class TestRewardsService {
 	@Test
 	public void nearAllAttractions() {
 		// Arrange ___
-		List<Attraction> attractions = gpsUtil.getAttractions();
-
 		// Sets proximity to MAX, so the user is near EVERY attraction
 		rewardsService.setProximityBuffer(Integer.MAX_VALUE);
 		// Sets the test to simulate 1 user
 		InternalTestHelper.setInternalUserNumber(1);
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+		tourGuideService.addUser(user);
 
 		// Act ___
 		// Add a visited location at each attraction location
 		for (Attraction attraction : attractions) {
-			VisitedLocation visited = new VisitedLocation(
-					user.getUserId(),
-					new Location(attraction.latitude, attraction.longitude),
-					new Date());
-			user.addToVisitedLocations(visited);
+			if (attraction != null) {
+				VisitedLocation visited = new VisitedLocation(
+						user.getUserId(),
+						new Location(attraction.latitude, attraction.longitude),
+						new Date());
+				user.addToVisitedLocations(visited);
+			}
 		}
 		// Retrieve a list of user's rewards and stop tracker thread
 		rewardsService.calculateRewards(user);
