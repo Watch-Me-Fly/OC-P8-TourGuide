@@ -8,13 +8,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import com.openclassrooms.tourguide.model.NearbyAttractionDTO;
 import gpsUtil.location.Location;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import gpsUtil.GpsUtil;
-import gpsUtil.location.Attraction;
 import gpsUtil.location.VisitedLocation;
 import rewardCentral.RewardCentral;
 import com.openclassrooms.tourguide.helper.InternalTestHelper;
@@ -115,7 +114,7 @@ public class TestTourGuideService {
 		user.addToVisitedLocations(visitedLocation);
 
 		rewardsService.setAttractionProximityRange(Integer.MAX_VALUE);
-		List<Attraction> attractions = tourGuideService.getNearByAttractions(visitedLocation);
+		List<NearbyAttractionDTO> attractions = tourGuideService.getNearByAttractions(visitedLocation);
 
 		tourGuideService.tracker.stopTracking();
 

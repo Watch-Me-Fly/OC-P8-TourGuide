@@ -1,20 +1,14 @@
 package com.openclassrooms.tourguide.service;
 
 import com.openclassrooms.tourguide.helper.InternalTestHelper;
+import com.openclassrooms.tourguide.model.NearbyAttractionDTO;
 import com.openclassrooms.tourguide.tracker.Tracker;
 import com.openclassrooms.tourguide.user.User;
 import com.openclassrooms.tourguide.user.UserReward;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -60,8 +54,10 @@ public class TourGuideService {
 	}
 
 	public VisitedLocation getUserLocation(User user) {
-		VisitedLocation visitedLocation = (user.getVisitedLocations().size() > 0) ? user.getLastVisitedLocation()
-				: trackUserLocation(user);
+		VisitedLocation visitedLocation =
+				(user.getVisitedLocations().size() > 0) ?
+						user.getLastVisitedLocation() :
+						trackUserLocation(user);
 		return visitedLocation;
 	}
 
@@ -70,7 +66,8 @@ public class TourGuideService {
 	}
 
 	public List<User> getAllUsers() {
-		return internalUserMap.values().stream().collect(Collectors.toList());
+		return internalUserMap.values().stream()
+				.collect(Collectors.toList());
 	}
 
 	public void addUser(User user) {
@@ -80,10 +77,15 @@ public class TourGuideService {
 	}
 
 	public List<Provider> getTripDeals(User user) {
-		int cumulatativeRewardPoints = user.getUserRewards().stream().mapToInt(i -> i.getRewardPoints()).sum();
-		List<Provider> providers = tripPricer.getPrice(tripPricerApiKey, user.getUserId(),
-				user.getUserPreferences().getNumberOfAdults(), user.getUserPreferences().getNumberOfChildren(),
-				user.getUserPreferences().getTripDuration(), cumulatativeRewardPoints);
+		int cumulatativeRewardPoints = user.getUserRewards().stream()
+				.mapToInt(i -> i.getRewardPoints()).sum();
+		List<Provider> providers = tripPricer.getPrice(
+				tripPricerApiKey,
+				user.getUserId(),
+				user.getUserPreferences().getNumberOfAdults(),
+				user.getUserPreferences().getNumberOfChildren(),
+				user.getUserPreferences().getTripDuration(),
+				cumulatativeRewardPoints);
 		user.setTripDeals(providers);
 		return providers;
 	}
@@ -95,15 +97,57 @@ public class TourGuideService {
 		return visitedLocation;
 	}
 
-	public List<Attraction> getNearByAttractions(VisitedLocation visitedLocation) {
-		List<Attraction> nearbyAttractions = new ArrayList<>();
-		for (Attraction attraction : gpsUtil.getAttractions()) {
-			if (rewardsService.isWithinAttractionProximity(attraction, visitedLocation.location)) {
-				nearbyAttractions.add(attraction);
+	public List<NearbyAttractionDTO> getNearByAttractions(VisitedLocation visitedLocation) {
+		// prepare a list to return
+		List<NearbyAttractionDTO> nearbyAttractions = new ArrayList<>();
+		UUID userId = visitedLocation.userId;
+		Location userLocation = visitedLocation.location;
+
+		// needs : a user's id, and a visited location
+		if (userId == null || userLocation == null) {
+			System.err.println("Visited location is incomplete");
+			return nearbyAttractions;
+		}
+
+		// get the attractions
+		List<Attraction> attractions;
+		try {
+			attractions = gpsUtil.getAttractions();
+			if (attractions == null || attractions.isEmpty()) {
+				System.err.println("No attractions found");
+				return nearbyAttractions;
+			}
+		} catch (Exception e) {
+			System.err.println("Error retrieving attractions : " + e.getMessage());
+			return nearbyAttractions;
+		}
+
+		// find the attractions
+		for (Attraction attraction : attractions) {
+			try {
+				double distance = rewardsService.getDistance(attraction, userLocation);
+				int rewardPoints = rewardsService.getRewardPoints(attraction, userId);
+
+				NearbyAttractionDTO dto = new NearbyAttractionDTO(
+						attraction.attractionName,
+						attraction.latitude,
+						attraction.longitude,
+						userLocation.latitude,
+						userLocation.longitude,
+						distance,
+						rewardPoints
+				);
+
+				nearbyAttractions.add(dto);
+			} catch (Exception e) {
+				System.err.println("Error retrieving attraction : " + e.getMessage());
 			}
 		}
 
-		return nearbyAttractions;
+		return nearbyAttractions.stream()
+				.sorted(Comparator.comparingDouble(dto -> dto.attractionDistance))
+				.limit(5)
+				.collect(Collectors.toList());
 	}
 
 	private void addShutDownHook() {
