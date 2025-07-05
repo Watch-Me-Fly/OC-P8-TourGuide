@@ -99,7 +99,7 @@ public class TestTourGuideService {
 		assertEquals(user.getUserId(), visitedLocation.userId);
 	}
 
-	/**Add commentMore actions
+	/**
 	 * Verifies that getNearByAttractions() returns the 5 closest attractions to the user
 	 */
 	@DisplayName("Verify returning nearby attractions")
