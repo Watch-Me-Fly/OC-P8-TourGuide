@@ -57,29 +57,28 @@ public class TestRewardsService {
 				new Attraction("Montmartre", "Paris", "FR", 48.8867, 2.3431));
 
 		rewardsService = new RewardsService(gpsUtil, rewardCentral);
-		lenient().when(gpsUtil.getAttractions()).thenReturn(attractions);
 		lenient().when(rewardCentral.getAttractionRewardPoints(any(), any())).thenReturn(500);
 	}
 
 	@Test
 	public void userGetRewards() {
+		// arrange __
 		InternalTestHelper.setInternalUserNumber(0);
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
 
-		// location
-		Location mockedLocation = new Location(10.0, 10.0);
-		VisitedLocation mockedVisit = new VisitedLocation(user.getUserId(), mockedLocation, new Date());
-		when(gpsUtil.getUserLocation(user.getUserId())).thenReturn(mockedVisit);
-
-		// attraction
 		Attraction attraction = attractions.getFirst();
-		user.addToVisitedLocations(new VisitedLocation(user.getUserId(), attraction, new Date()));
+		Location mockedLocation = new Location(attraction.latitude, attraction.longitude);
+		VisitedLocation mockedVisit = new VisitedLocation(user.getUserId(), mockedLocation, new Date());
 
-		// act
+		when(gpsUtil.getUserLocation(user.getUserId())).thenReturn(mockedVisit);
+		when(gpsUtil.getAttractions()).thenReturn(List.of(attraction));
+
+		// act __
 		tourGuideService.trackUserLocation(user);
 
 		List<UserReward> userRewards = user.getUserRewards();
 
+		// assert __
 		tourGuideService.tracker.stopTracking();
         assertEquals(1, userRewards.size());
 	}
@@ -99,6 +98,7 @@ public class TestRewardsService {
 	public void nearAllAttractions() {
 		// Arrange ___
 		// Sets proximity to MAX, so the user is near EVERY attraction
+		when(gpsUtil.getAttractions()).thenReturn(attractions);
 		rewardsService.setProximityBuffer(Integer.MAX_VALUE);
 		// Sets the test to simulate 1 user
 		InternalTestHelper.setInternalUserNumber(1);
