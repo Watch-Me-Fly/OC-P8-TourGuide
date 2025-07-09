@@ -1,8 +1,8 @@
 package com.openclassrooms.tourguide;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -63,14 +63,13 @@ public class TestPerformance {
 	@Test
 	public void highVolumeTrackLocation() {
 		// simulate user's list
-		List<User> allUsers = new ArrayList<>();
-		allUsers = tourGuideService.getAllUsers();
+		List<User> allUsers = tourGuideService.getAllUsers();
 
 		// start service and fetch users
 		stopWatch.start();
-		for (User user : allUsers) {
-			tourGuideService.addUser(user);
-		}
+
+		// track locations
+		tourGuideService.trackAllUsersLocations(allUsers);
 
 		long limitTo15minutes = TimeUnit.MINUTES.toSeconds(15);
 		long totalTime = TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime());
@@ -88,23 +87,24 @@ public class TestPerformance {
 		stopWatch.start();
 
 		// simulate an attraction
-		Attraction attraction = gpsUtil.getAttractions().get(0);
+		Attraction attraction = gpsUtil.getAttractions().getFirst();
 
 		// generate a list of users again
-		List<User> allUsers = new ArrayList<>();
-		allUsers = tourGuideService.getAllUsers();
+		List<User> allUsers = tourGuideService.getAllUsers();
 
 		allUsers.forEach(user -> {
-			// add the attraction to each user
+			// add an attraction to each user
 			VisitedLocation visitedLocation = new VisitedLocation(
 					user.getUserId(), attraction, new Date());
 			user.addToVisitedLocations(visitedLocation);
+		});
 
-			// calculate rewards
-			rewardsService.calculateRewards(user);
+		// act
+		rewardsService.calculateRewardsForMultipleUsers(allUsers);
 
-			// check user was rewarded
-			assertTrue(user.getUserRewards().size() > 0);
+		// assert all users were rewarded
+		allUsers.forEach(user -> {
+			assertFalse(user.getUserRewards().isEmpty());
 		});
 
 		long limitTo20minutes = TimeUnit.MINUTES.toSeconds(20);
