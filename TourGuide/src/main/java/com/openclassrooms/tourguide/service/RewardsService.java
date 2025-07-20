@@ -3,6 +3,7 @@ package com.openclassrooms.tourguide.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.stereotype.Service;
 
@@ -46,7 +47,7 @@ public class RewardsService {
 		List<VisitedLocation> userLocations = new ArrayList<>(user.getVisitedLocations());
 		List<Attraction> attractions = new ArrayList<>(gpsUtil.getAttractions());
 		List<UserReward> rewards = new ArrayList<>(user.getUserRewards());
-		List<UserReward> newRewards = new ArrayList<>();
+		List<CompletableFuture<Void>> futures = new ArrayList<>();
 
 		for(VisitedLocation visitedLocation : userLocations) {
 			for(Attraction attraction : attractions) {
@@ -57,14 +58,30 @@ public class RewardsService {
 
 				if (isNotYetAwarded && nearAttraction(visitedLocation, attraction))
 				{
-					int nbOfPoints = getRewardPoints(attraction, user.getUserId());
-					newRewards.add(new UserReward(visitedLocation, attraction, nbOfPoints));
+					CompletableFuture<Void> future= CompletableFuture.runAsync(() -> {
+						int nbOfPoints = getRewardPoints(attraction, user.getUserId());
+						user.addUserReward(new UserReward(visitedLocation, attraction, nbOfPoints));
+					});
+					futures.add(future);
 				}
 			}
 		}
 
 		// safely add rewards after iteration
-		newRewards.forEach(user::addUserReward);
+		CompletableFuture
+				.allOf(futures.toArray(new CompletableFuture[0]))
+				.join();
+	}
+
+	public void calculateRewardsForMultipleUsers(List<User> users) {
+		List<CompletableFuture<Void>> futures = users.stream()
+				.map(user -> CompletableFuture.runAsync(() -> {
+					calculateRewards(user);
+				}))
+				.toList();
+		CompletableFuture
+				.allOf(futures.toArray(new CompletableFuture[0]))
+				.join();
 	}
 	
 	public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
