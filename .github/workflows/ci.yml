@@ -21,6 +21,10 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: 🔴 check if jar files exist
+        working-directory : TourGuide
+        run: ls -l libs/
+
 ## build dependencies first
       - name: 🧱 Build gpsUtil
         working-directory: TourGuide
