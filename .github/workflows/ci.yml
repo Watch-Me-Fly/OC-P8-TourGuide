@@ -23,6 +23,7 @@ jobs:
 
 ## build dependencies first
       - name: 🧱 Build gpsUtil
+        working-directory: TourGuide
         run: mvn install:install-file \
            -Dfile=TourGuide/libs/gpsUtil.jar
            -DgroupId=gpsUtil \
@@ -31,6 +32,7 @@ jobs:
            -Dpackaging=jar
 
       - name: 🧱 Build tripPricer
+        working-directory: TourGuide
         run: mvn install:install-file \
            -Dfile=TourGuide/libs/TripPricer.jar
            -DgroupId=tripPricer \
@@ -39,6 +41,7 @@ jobs:
            -Dpackaging=jar
 
       - name: 🧱 Build rewardCentral
+        working-directory: TourGuide
         run: mvn install:install-file \
            -Dfile=TourGuide/libs/RewardCentral.jar
            -DgroupId=rewardCentral \
