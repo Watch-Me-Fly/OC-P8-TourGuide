@@ -25,29 +25,29 @@ jobs:
       - name: 🧱 Build gpsUtil
         working-directory: TourGuide
         run: mvn install:install-file \
-           -Dfile=TourGuide/libs/gpsUtil.jar
-           -DgroupId=gpsUtil \
-           -DartifactId=gpsUtil \
-           -Dversion=1.0.0 \
-           -Dpackaging=jar
+            -Dfile=libs/gpsUtil.jar \
+            -DgroupId=rewardCentral \
+            -DartifactId=rewardCentral \
+            -Dversion=1.0.0 \
+            -Dpackaging=jar
 
       - name: 🧱 Build tripPricer
         working-directory: TourGuide
         run: mvn install:install-file \
-           -Dfile=TourGuide/libs/TripPricer.jar
-           -DgroupId=tripPricer \
-           -DartifactId=tripPricer \
-           -Dversion=1.0.0 \
-           -Dpackaging=jar
+            -Dfile=libs/TripPricer.jar \
+            -DgroupId=rewardCentral \
+            -DartifactId=rewardCentral \
+            -Dversion=1.0.0 \
+            -Dpackaging=jar
 
       - name: 🧱 Build rewardCentral
         working-directory: TourGuide
         run: mvn install:install-file \
-           -Dfile=TourGuide/libs/RewardCentral.jar
-           -DgroupId=rewardCentral \
-           -DartifactId=rewardCentral \
-           -Dversion=1.0.0 \
-           -Dpackaging=jar
+            -Dfile=libs/rewardCentral.jar \
+            -DgroupId=rewardCentral \
+            -DartifactId=rewardCentral \
+            -Dversion=1.0.0 \
+            -Dpackaging=jar
         
 ## build project
       - name: 🧱 Build TourGuide
