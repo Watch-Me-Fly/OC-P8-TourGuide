@@ -3,14 +3,15 @@ package com.openclassrooms.tourguide.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
+import com.openclassrooms.tourguide.interfaces.IGpsUtilService;
+import com.openclassrooms.tourguide.interfaces.IRewardCentral;
 import org.springframework.stereotype.Service;
 
-import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
-import rewardCentral.RewardCentral;
 import com.openclassrooms.tourguide.user.User;
 import com.openclassrooms.tourguide.user.UserReward;
 
@@ -22,18 +23,18 @@ public class RewardsService {
     private int defaultProximityBuffer = 10;
 	private int proximityBuffer = defaultProximityBuffer;
 	private int attractionProximityRange = 200;
-	private final GpsUtil gpsUtil;
-	private final RewardCentral rewardsCentral;
-	
-	public RewardsService(GpsUtil gpsUtil, RewardCentral rewardCentral) {
+	private final IGpsUtilService gpsUtil;
+	private final IRewardCentral rewardsCentral;
+
+	public RewardsService(IGpsUtilService gpsUtil, IRewardCentral rewardCentral) {
 		this.gpsUtil = gpsUtil;
 		this.rewardsCentral = rewardCentral;
 	}
-	
+
 	public void setProximityBuffer(int proximityBuffer) {
 		this.proximityBuffer = proximityBuffer;
 	}
-	
+
 	public void setDefaultProximityBuffer() {
 		proximityBuffer = defaultProximityBuffer;
 	}
@@ -46,7 +47,6 @@ public class RewardsService {
 		List<VisitedLocation> userLocations = new ArrayList<>(user.getVisitedLocations());
 		List<Attraction> attractions = new ArrayList<>(gpsUtil.getAttractions());
 		List<UserReward> rewards = new ArrayList<>(user.getUserRewards());
-		List<UserReward> newRewards = new ArrayList<>();
 
 		for(VisitedLocation visitedLocation : userLocations) {
 			for(Attraction attraction : attractions) {
@@ -58,13 +58,21 @@ public class RewardsService {
 				if (isNotYetAwarded && nearAttraction(visitedLocation, attraction))
 				{
 					int nbOfPoints = getRewardPoints(attraction, user.getUserId());
-					newRewards.add(new UserReward(visitedLocation, attraction, nbOfPoints));
+					user.addUserReward(new UserReward(visitedLocation, attraction, nbOfPoints));
 				}
 			}
 		}
+	}
 
-		// safely add rewards after iteration
-		newRewards.forEach(user::addUserReward);
+	public void calculateRewardsForMultipleUsers(List<User> users) {
+		List<CompletableFuture<Void>> futures = users.stream()
+				.map(user -> CompletableFuture.runAsync(() -> {
+					calculateRewards(user);
+				}))
+				.toList();
+		CompletableFuture
+				.allOf(futures.toArray(new CompletableFuture[0]))
+				.join();
 	}
 	
 	public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
@@ -89,8 +97,7 @@ public class RewardsService {
                                + Math.cos(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2));
 
         double nauticalMiles = 60 * Math.toDegrees(angle);
-        double statuteMiles = STATUTE_MILES_PER_NAUTICAL_MILE * nauticalMiles;
-        return statuteMiles;
+        return STATUTE_MILES_PER_NAUTICAL_MILE * nauticalMiles;
 	}
 
 }
