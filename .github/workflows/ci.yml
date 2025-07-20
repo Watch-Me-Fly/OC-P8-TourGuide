@@ -27,6 +27,9 @@ jobs:
       - name: 🗂️ Open Folder
         run: cd TourGuide/
         
+      - name: 🗂️ check folders again
+        run: ls
+        
       - name: 🛠️ Compile project
         run: mvn compile
         
