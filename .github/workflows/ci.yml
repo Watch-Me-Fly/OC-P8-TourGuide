@@ -21,12 +21,12 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: 🗂️ Open Folder
+        run: cd TourGuide
+        
       - name: 🛠️ Compile project
         run: mvn compile
         
-      - name: 🗂️ Open Folder
-        run: cd TourGuide
-
       - name: ✅ Run unit and integration tests (performance tests disabled)
         run: mvn test -Dskip.performance.tests=true
 
