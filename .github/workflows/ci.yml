@@ -21,8 +21,11 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: 🗂️ check folders
+        run: ls
+        
       - name: 🗂️ Open Folder
-        run: cd OC-P8-TourGuide/TourGuide/
+        run: cd TourGuide/
         
       - name: 🛠️ Compile project
         run: mvn compile
