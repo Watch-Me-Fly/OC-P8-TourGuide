@@ -22,7 +22,7 @@ jobs:
           distribution: 'temurin'
 
       - name: 🗂️ Open Folder
-        run: cd TourGuide
+        run: cd OC-P8-TourGuide/TourGuide/
         
       - name: 🛠️ Compile project
         run: mvn compile
