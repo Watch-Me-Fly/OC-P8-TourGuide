@@ -47,7 +47,7 @@ jobs:
       - name: 🧱 Build rewardCentral
         working-directory: TourGuide
         run: mvn install:install-file \
-            -Dfile=libs/rewardCentral.jar \
+            -Dfile=libs/RewardCentral.jar \
             -DgroupId=rewardCentral \
             -DartifactId=rewardCentral \
             -Dversion=1.0.0 \
