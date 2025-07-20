@@ -6,25 +6,22 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import com.openclassrooms.tourguide.interfaces.*;
 import gpsUtil.location.Location;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
 import gpsUtil.location.VisitedLocation;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import rewardCentral.RewardCentral;
 import com.openclassrooms.tourguide.helper.InternalTestHelper;
 import com.openclassrooms.tourguide.service.RewardsService;
 import com.openclassrooms.tourguide.service.TourGuideService;
@@ -35,9 +32,9 @@ import com.openclassrooms.tourguide.user.UserReward;
 public class TestRewardsService {
 
 	@Mock
-	private GpsUtil gpsUtil;
+	private IGpsUtilService gpsUtil;
 	@Mock
-	private RewardCentral rewardCentral;
+	private IRewardCentral rewardCentral;
 	@InjectMocks
 	private RewardsService rewardsService;
 
@@ -46,8 +43,6 @@ public class TestRewardsService {
 
 	@BeforeEach
 	public void setup() {
-		MockitoAnnotations.openMocks(this);
-
 		user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 		attractions = List.of(
 				new Attraction("Eiffel Tower", "Paris", "FR", 48.8584, 2.2945),
@@ -63,14 +58,14 @@ public class TestRewardsService {
 	@Test
 	public void userGetRewards() {
 		// arrange __
-		InternalTestHelper.setInternalUserNumber(0);
+		InternalTestHelper.setInternalUserNumber(100);
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
 
 		Attraction attraction = attractions.getFirst();
 		Location mockedLocation = new Location(attraction.latitude, attraction.longitude);
 		VisitedLocation mockedVisit = new VisitedLocation(user.getUserId(), mockedLocation, new Date());
 
-		when(gpsUtil.getUserLocation(user.getUserId())).thenReturn(mockedVisit);
+		when(gpsUtil.getUserLocation(user)).thenReturn(mockedVisit);
 		when(gpsUtil.getAttractions()).thenReturn(List.of(attraction));
 
 		// act __

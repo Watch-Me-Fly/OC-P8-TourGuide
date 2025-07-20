@@ -2,18 +2,21 @@ package com.openclassrooms.tourguide;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.openclassrooms.tourguide.interfaces.IGpsUtilService;
+import com.openclassrooms.tourguide.interfaces.IRewardCentral;
+import gpsUtil.location.Location;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.jupiter.api.*;
 
-import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
 import gpsUtil.location.VisitedLocation;
-import rewardCentral.RewardCentral;
 import com.openclassrooms.tourguide.helper.InternalTestHelper;
 import com.openclassrooms.tourguide.service.RewardsService;
 import com.openclassrooms.tourguide.service.TourGuideService;
@@ -34,15 +37,32 @@ import com.openclassrooms.tourguide.user.User;
  */
 public class TestPerformance {
 
-	private static GpsUtil gpsUtil;
+	private static IGpsUtilService gpsUtil;
 	private static RewardsService rewardsService;
 	private static TourGuideService tourGuideService;
 	private StopWatch stopWatch;
 
 	@BeforeAll
 	static void setUpBeforeClass() {
-		gpsUtil = new GpsUtil();
-		rewardsService = new RewardsService(gpsUtil, new RewardCentral());
+		gpsUtil = mock(IGpsUtilService.class);
+		IRewardCentral rewardCentral = mock(IRewardCentral.class);
+		
+		when(gpsUtil.getAttractions()).thenReturn(generateMockAttractions());
+		when(gpsUtil.getUserLocation(any(User.class))).thenAnswer(invocation -> {
+			User user = invocation.getArgument(0);
+			return new VisitedLocation(user.getUserId(), new Location(48.8584, 2.2945), new Date());
+		});
+		when(rewardCentral.getAttractionRewardPoints(any(), any())).thenReturn(100);
+
+		rewardsService = new RewardsService(gpsUtil, rewardCentral);
+	}
+
+	private static List<Attraction> generateMockAttractions() {
+		return List.of(
+				new Attraction("Eiffel Tower", "Paris", "FR", 48.8584, 2.2945),
+				new Attraction("Big Ben", "London", "UK", 51.5007, -0.1246),
+				new Attraction("Colosseum", "Rome", "IT", 41.8902, 12.4922)
+		);
 	}
 
 	@BeforeEach
@@ -87,7 +107,7 @@ public class TestPerformance {
 		stopWatch.start();
 
 		// simulate an attraction
-		Attraction attraction = gpsUtil.getAttractions().getFirst();
+		Attraction attraction = gpsUtil.getAttractions().get(0);
 
 		// generate a list of users again
 		List<User> allUsers = tourGuideService.getAllUsers();
