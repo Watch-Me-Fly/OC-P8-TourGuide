@@ -20,17 +20,9 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-
-      - name: 🗂️ check folders
-        run: ls
-        
-      - name: 🗂️ Open Folder
-        run: cd TourGuide/
-        
-      - name: 🗂️ check folders again
-        run: ls
         
       - name: 🛠️ Compile project
+        working-directory: TourGuide
         run: mvn compile
         
       - name: ✅ Run unit and integration tests (performance tests disabled)
