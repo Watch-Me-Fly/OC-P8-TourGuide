@@ -31,7 +31,7 @@ jobs:
         run: pwd
         
 ## build dependencies first
-      - name: 🧱 Check and install gpsUtil JAR
+      - name: 🧱 Check and Build gpsUtil JAR
         working-directory: TourGuide
         run: |
             ls -l libs/gpsUtil.jar
@@ -42,23 +42,27 @@ jobs:
               -Dversion=1.0.0 \
               -Dpackaging=jar
 
-      - name: 🧱 Build tripPricer
+      - name: 🧱 Check and Build tripPricer JAR
         working-directory: TourGuide
-        run: mvn install:install-file \
-            -Dfile=libs/TripPricer.jar \
-            -DgroupId=tripPricer \
-            -DartifactId=tripPricer \
-            -Dversion=1.0.0 \
-            -Dpackaging=jar
-
-      - name: 🧱 Build rewardCentral
+        run: |
+            ls -l libs/TripPricer.jar
+            mvn install:install-file \
+              -Dfile=libs/TripPricer.jar \
+              -DgroupId=tripPricer \
+              -DartifactId=tripPricer \
+              -Dversion=1.0.0 \
+              -Dpackaging=jar
+        
+      - name: 🧱 Check and Build rewardCentral JAR
         working-directory: TourGuide
-        run: mvn install:install-file \
-            -Dfile=libs/RewardCentral.jar \
-            -DgroupId=rewardCentral \
-            -DartifactId=rewardCentral \
-            -Dversion=1.0.0 \
-            -Dpackaging=jar
+        run: |
+            ls -l libs/RewardCentral.jar
+            mvn install:install-file \
+              -Dfile=libs/RewardCentral.jar \
+              -DgroupId=rewardCentral \
+              -DartifactId=rewardCentral \
+              -Dversion=1.0.0 \
+              -Dpackaging=jar
         
 ## build project
       - name: 🧱 Build TourGuide
