@@ -35,6 +35,7 @@ import com.openclassrooms.tourguide.user.User;
  *
  * <p>To adjust user count, call: {@code InternalTestHelper.setInternalUserNumber(x)}</p>
  */
+@Tag("performance")
 public class TestPerformance {
 
 	private static IGpsUtilService gpsUtil;
