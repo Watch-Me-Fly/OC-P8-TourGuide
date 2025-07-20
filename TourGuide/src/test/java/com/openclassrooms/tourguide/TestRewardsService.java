@@ -61,13 +61,13 @@ public class TestRewardsService {
 		InternalTestHelper.setInternalUserNumber(100);
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
 
-		Attraction attraction = attractions.getFirst();
+		Attraction attraction = attractions.get(0);
 		Location mockedLocation = new Location(attraction.latitude, attraction.longitude);
 		VisitedLocation mockedVisit = new VisitedLocation(user.getUserId(), mockedLocation, new Date());
 
 		when(gpsUtil.getUserLocation(user)).thenReturn(mockedVisit);
-//		when(gpsUtil.getAttractions()).thenReturn(List.of(attraction));
-		when(gpsUtil.getAttractions()).thenReturn(attractions);
+		when(gpsUtil.getAttractions()).thenReturn(List.of(attraction));
+//		when(gpsUtil.getAttractions()).thenReturn(attractions);
 
 		// act __
 		tourGuideService.trackUserLocation(user);
