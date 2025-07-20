@@ -66,7 +66,8 @@ public class TestRewardsService {
 		VisitedLocation mockedVisit = new VisitedLocation(user.getUserId(), mockedLocation, new Date());
 
 		when(gpsUtil.getUserLocation(user)).thenReturn(mockedVisit);
-		when(gpsUtil.getAttractions()).thenReturn(List.of(attraction));
+//		when(gpsUtil.getAttractions()).thenReturn(List.of(attraction));
+		when(gpsUtil.getAttractions()).thenReturn(attractions);
 
 		// act __
 		tourGuideService.trackUserLocation(user);
